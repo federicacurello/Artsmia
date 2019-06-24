@@ -6,6 +6,9 @@ package it.polito.tdp.artsmia;
 
 import java.net.URL;
 import java.util.ResourceBundle;
+
+import it.polito.tdp.artsmia.model.ArtObject;
+import it.polito.tdp.artsmia.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -14,6 +17,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 
 public class ArtsmiaController {
+	private Model model;
 
 	@FXML // ResourceBundle that was given to the FXMLLoader
 	private ResourceBundle resources;
@@ -22,7 +26,7 @@ public class ArtsmiaController {
 	private URL location;
 
 	@FXML // fx:id="boxLUN"
-	private ChoiceBox<?> boxLUN; // Value injected by FXMLLoader
+	private ChoiceBox<Integer> boxLUN; // Value injected by FXMLLoader
 
 	@FXML // fx:id="btnCalcolaComponenteConnessa"
 	private Button btnCalcolaComponenteConnessa; // Value injected by FXMLLoader
@@ -38,20 +42,54 @@ public class ArtsmiaController {
 
 	@FXML // fx:id="txtResult"
 	private TextArea txtResult; // Value injected by FXMLLoader
+	private int id;
 
 	@FXML
 	void doAnalizzaOggetti(ActionEvent event) {
-		txtResult.setText("doAnalizzaOggetti");
+		this.model.creaGrafo();
+		txtResult.appendText("Grafo creato "+ model.getVertexSize()+ " vertici e "+ model.getEdgeSixe()+ " archi");
 	}
 
 	@FXML
 	void doCalcolaComponenteConnessa(ActionEvent event) {
-		txtResult.setText("doCalcolaComponenteConnessa");
+		try {
+			id= Integer.parseInt(txtObjectId.getText());
+			
+		
+		if(model.cercaOggetto(id)==null) {
+			txtResult.appendText("\nErrore, identificativo dell'oggetto errato!\n");
+			return;
+		}
+		else {
+			txtResult.appendText("\nOggetto trovato!\n");
+		}
+		txtResult.appendText("\nComponente connessa: \n");
+		for(ArtObject a: model.componenteConnessa(model.cercaOggetto(id))){
+			txtResult.appendText(a.toString() +" - ");
+		}
+		
+		txtResult.appendText("\nNumero di componenti connesse: "+model.numeroConnessi(model.cercaOggetto(id))+"\n");
+		setBox(model.numeroConnessi(model.cercaOggetto(id)));
+		}catch(NumberFormatException e) {
+			e.printStackTrace();
+			return;
+		}
+	}
+
+	private void setBox(int numeroConnessi) {
+		boxLUN.getItems().removeAll();
+		for(int i=2; i<=numeroConnessi; i++) {
+		boxLUN.getItems().add(i);
+		}
 	}
 
 	@FXML
 	void doCercaOggetti(ActionEvent event) {
-		txtResult.setText("doCercaOggetti");
+		txtResult.appendText("\nCammino di peso massimo: :\n");
+		for(ArtObject a:model.getPercorsoPesoMassimo(boxLUN.getValue(),model.cercaOggetto(id))) {
+			txtResult.appendText(a.toString()+" \n ");
+		}
+		txtResult.appendText("Peso massimo: "+ model.getPercorsoPesoMassimo(boxLUN.getValue(),model.cercaOggetto(id)).size());
 	}
 
 	@FXML // This method is called by the FXMLLoader when initialization is complete
@@ -63,5 +101,10 @@ public class ArtsmiaController {
 		assert txtObjectId != null : "fx:id=\"txtObjectId\" was not injected: check your FXML file 'Artsmia.fxml'.";
 		assert txtResult != null : "fx:id=\"txtResult\" was not injected: check your FXML file 'Artsmia.fxml'.";
 
+	}
+
+	public void setModel(Model model) {
+		this.model=model;
+		
 	}
 }
